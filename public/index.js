@@ -1,3 +1,5 @@
+language_input = document.getElementById('language')
+problemId_input = document.getElementById('problemId')
 
 async function sendCodeToServer() {
     console.log("sendCodeToServer Function in index.js");
@@ -7,11 +9,11 @@ async function sendCodeToServer() {
         mode: 'no-cors',
         method: 'post',
         headers: {
-        //   'Content-Type': 'application/json',
+        //   'Content-Type':  'application/json',
         "Content-type": 'text/plain'
-        //   'Access-Control-Allow-Origin': '*',
+        // //   'Access-Control-Allow-Origin': '*',
         },
-        body: JSON.stringify({ code: 'console.log("Hello, World!")', language: 'javascript' }),
+        body: JSON.stringify({ code: fileContents, language: language_input.options[language_input.selectedIndex].value, problemId: problemId_input.options[problemId_input.selectedIndex].value }),
         // body: JSON.stringify({ code:  `${fileContents}`, language: 'javascript' }),
 
     });

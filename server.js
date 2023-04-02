@@ -1,19 +1,20 @@
 const express = require('express');
-// const bodyParser = require('body-parser');
+const bodyParser = require('body-parser');
 const app = express();
+const axios = require('axios')
+
 // import  * as utils  = require('./utils');
 // import * as utils from './utils';
 const utils = require('./utils/utility');
 
-// app.use(bodyParser.urlencoded({ extended: true }));
-// app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use(express.text())
 app.use(express.static('public'));
 
 app.get('/', (req, res) => {
-//   res.send('Hello, World!');
+  res.send('Hello, World!');
 // res.send('index.html');
-res.sendFile(__dirname + '/index.html');
 });
 
 // GET route for /areYouActive
@@ -29,14 +30,20 @@ app.get('/areYouActive', (req, res) => {
     // fetch('http://localhost:3000/areYouActive')
 
 
-app.post('/testCode', (req, res) => {
-    // const ip = req.ip;
-    // const code = req.body.code;
-    // const language = req.body.language;
-    // const result = utils.testCode(code, language);
-    // console.log(req.body);
-    console.log(req.body);
+app.post('/testCode',async (req, res) => {
     res.send({ message: 'Testing' });
+    console.log(req.body);
+    // const ip = req.ip;
+    parsedReq = JSON.parse(req.body);
+    const result = await utils.testCode(parsedReq.code, parsedReq.language, parsedReq.problemId);
+    console.log(result);
+    axios.post('http://localhost:3000/receiveCodeStatus', result)
+    .then(function (response) {
+      console.log(response.data);
+    });
+    // console.log(req.body);
+    // console.log(JSON.parse(req.body).code);
+    
 });
     
 
@@ -45,6 +52,7 @@ app.post('/receiveCodeStatus', (req, res) => {
     // const ip = req.ip;
     // const status = req.body.status;
     // const metadata = req.body.metadata;
+    console.log(req.body);
     res.send({ message: 'Thanks for Testing' });
 });
 
