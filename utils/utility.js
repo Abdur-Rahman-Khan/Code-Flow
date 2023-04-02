@@ -2,6 +2,7 @@ const { exec } = require('child_process');
 const fs = require('fs');
 const crypto = require('crypto');
 
+let codeRunResponse = [];
 
 const knownIPs = new Set();
 const lang_data = {
@@ -105,23 +106,50 @@ async function runAllTests(problemId, code_exe, language) {
 
 async function testCode(code, language, problemId) {
   // console.log(`Testing code: ${code}`);
-  console.log(`Language: ${language}`);
-  console.log(`Problem Id: ${problemId}`);
+
+  // console.log(`Inside Utilty testcode Language: ${language}`);
+  // console.log(`Inside Utilty testcode Problem Id: ${problemId}`);
   //return object with result and error message
   // Save code to file
   fileName = 'code';
   await saveCode(fileName, code, language);
   compiled = await compileCode(fileName, language);
-  console.log(compiled)
+  console.log(`Inside Utilty testcode`,compiled)
   if(!compiled.status) {
       return { result: 'Compilation Error', test_hashes: []};
   }
+  // console.log("Done testing utility testCode");
   return await runAllTests(problemId, compiled.compiledFile, language);
+}
+function checkConsenus() {
+  // console.log("Inside utility checkConsenus");
+  let majority = Math.ceil(codeRunResponse.length/2);
+  let count = 0;
+  let majorityElement = null;
+  for(let i=0; i<codeRunResponse.length; i++) {
+    //compare majorityElement with current element as object
+    if(JSON.stringify(codeRunResponse[i]) == JSON.stringify(majorityElement)) {
+      count++;
+    } else if(count == 0) {
+      majorityElement = codeRunResponse[i];
+      count = 1;
+    } else {
+      count--;
+    }
+  }
+  //log
+  codeRunResponse = [];
+  if(count > majority) {
+    return majorityElement;
+  }
+  return null;
 }
 
 //export function
 module.exports = {
     getIpAddresses: getIpAddresses,
     bootRun: bootRun,
-    testCode: testCode
+    testCode: testCode,
+    codeRunResponse: codeRunResponse,
+    checkConsenus: checkConsenus
 }

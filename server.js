@@ -13,8 +13,8 @@ app.use(express.text())
 app.use(express.static('public'));
 
 app.get('/', (req, res) => {
-  res.send('Hello, World!');
-// res.send('index.html');
+    // res.send('Hello, World!');
+    res.send('index.html');
 });
 
 // GET route for /areYouActive
@@ -32,14 +32,15 @@ app.get('/areYouActive', (req, res) => {
 
 app.post('/testCode',async (req, res) => {
     res.send({ message: 'Testing' });
-    console.log(req.body);
+    // console.log("Inside Server.js testcode",req.body);
+    // console.log(req.body);
     // const ip = req.ip;
     parsedReq = JSON.parse(req.body);
     const result = await utils.testCode(parsedReq.code, parsedReq.language, parsedReq.problemId);
-    console.log(result);
+    // console.log("Inside Server.js testcode 1 " ,result);
     axios.post('http://localhost:3000/receiveCodeStatus', result)
     .then(function (response) {
-      console.log(response.data);
+      console.log("Inside Server.js testcode",response.data);
     });
     // console.log(req.body);
     // console.log(JSON.parse(req.body).code);
@@ -52,8 +53,16 @@ app.post('/receiveCodeStatus', (req, res) => {
     // const ip = req.ip;
     // const status = req.body.status;
     // const metadata = req.body.metadata;
-    console.log(req.body);
+    // console.log("Inside server.js receiveCode status",req.body);
     res.send({ message: 'Thanks for Testing' });
+
+    utils.codeRunResponse.push(req.body);
+    if(utils.codeRunResponse.length === 3) {
+        // console.log("Inside server.js receiveCode status",utils.codeRunResponse);
+        let consensus = utils.checkConsenus();
+        console.log("Inside server.js receiveCode status Concensus",consensus);
+        utils.codeRunResponse = [];
+    }
 });
 
 
