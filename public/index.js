@@ -5,7 +5,7 @@ async function sendCodeToServer() {
     console.log("sendCodeToServer Function in index.js");
     const fileContents = await readInputFile();
     // console.log("Here",fileContents);
-    fetch('http://localhost:3000/testCode', {
+    fetch('http://localhost:3000/testCodeBackend', {
         mode: 'no-cors',
         method: 'post',
         headers: {
