@@ -1,7 +1,12 @@
 const { exec } = require('child_process');
 const fs = require('fs');
 const crypto = require('crypto');
+const os = require('os');
+const axios = require('axios')
 
+//get operating system name in string
+const osType=os.type();
+console.log("OS Type",osType);
 let codeRunResponse = [];
 
 const knownIPs = new Set();
@@ -21,7 +26,9 @@ const lang_data = {
 };
 
 function getIpAddresses() {
-  return Array.from(knownIPs);
+  let temp= ['127.0.0.1:3001' , '127.0.0.1:3002', '127.0.0.1.3003'];
+  return temp;
+  // return Array.from(knownIPs);
 }
 
 function bootRun(){
@@ -66,24 +73,38 @@ function compileCode(fileName, language) {
 }
 
 function runCode(code_exe, test_file, language='C') {
+  console.log(`Inside Utility runCode`);
   return new Promise((resolve,reject) => {
-    exec(`${lang_data[language].run_cmd} ${code_exe} ${test_file}`,{'timeout': 2000}, (error, stdout, stderr) => {
+    let execString="";
+    if(osType.includes('Windows')) {
+      execString=`${lang_data[language].run_cmd} ${code_exe} ${test_file}`;
+    } else {
+      execString=`./a.out ${test_file}`;
+    }
+    // exec(`${lang_data[language].run_cmd} ${code_exe} ${test_file}`,{'timeout': 2000}, (error, stdout, stderr) => {
+    exec(`${execString}`,{'timeout': 2000}, (error, stdout, stderr) => {
+    // console.log(`${lang_data[language].run_cmd} ${code_exe} ${test_file}`);
     if (error) {
-      // console.error(`Exec error: ${error}`);
+      console.error(`Exec error: ${error}`);
       return;
     }
 
     if (stderr) {
-      // console.error(`Execution error: ${stderr}`);
+      console.error(`Execution error: ${stderr}`);
       resolve(stderr)
     }
 
-    // console.log(`Execution success: ${stdout}`)
+    console.log(`Execution success: ${stdout}`)
     resolve(stdout);
   })});
 }
 async function isCorrectOutput(problemId, given_ans, testFile) {
-  correct_ans = await runCode(`Problems\\P${problemId}\\a.exe`, testFile);
+  if(osType.includes('Windows')) 
+    correct_ans = await runCode(`Problems\\P${problemId}\\a.exe`, testFile);
+  else
+    correct_ans = await runCode(`Problems\\P${problemId}\\./a.out`, testFile);
+    console.log("Inside Utility isCorrectOutput",correct_ans)
+    console.log(`Given ans: ${given_ans}`);
   if(given_ans === correct_ans) {
     return true
   }
@@ -91,6 +112,7 @@ async function isCorrectOutput(problemId, given_ans, testFile) {
 }
 
 async function runAllTests(problemId, code_exe, language) {
+  console.log(`Inside Utility runAllTests`);
   test_hashes = [];
   for(let i=0; i<3; i++) {
       testFile = `Problems\\P${problemId}\\test${i}.txt`
@@ -98,9 +120,11 @@ async function runAllTests(problemId, code_exe, language) {
       var hash = crypto.createHash('md5').update(given_ans).digest('hex');
       test_hashes.push(hash);
       if(!await isCorrectOutput(problemId, given_ans, testFile)) {
+        console.log("Done testing utility runAllTests Inside Error");
         return { 'status': `Test case ${i} Failed!`, 'meta_data': test_hashes};
       }
   }
+  console.log("Done testing utility runAllTests");
   return { 'status': 'All Test Cases Passed!', 'meta_data': test_hashes};
 }
 
@@ -114,11 +138,11 @@ async function testCode(code, language, problemId) {
   fileName = 'code';
   await saveCode(fileName, code, language);
   compiled = await compileCode(fileName, language);
-  console.log(`Inside Utilty testcode`,compiled)
+  console.log(`Inside Utility testcode`,compiled)
   if(!compiled.status) {
       return { result: 'Compilation Error', test_hashes: []};
   }
-  // console.log("Done testing utility testCode");
+  console.log("Done testing utility testCode");
   return await runAllTests(problemId, compiled.compiledFile, language);
 }
 function checkConsenus() {
@@ -139,10 +163,17 @@ function checkConsenus() {
   }
   //log
   codeRunResponse = [];
-  if(count > majority) {
+  if(count >= majority) {
     return majorityElement;
   }
   return null;
+}
+function makeTestCodeRequest(ip,code){
+  axios.post(`http://${ip}/testCode`, code, {
+        headers: {
+            'Content-Type': 'text/plain'
+        }
+    })
 }
 
 //export function
@@ -151,5 +182,6 @@ module.exports = {
     bootRun: bootRun,
     testCode: testCode,
     codeRunResponse: codeRunResponse,
-    checkConsenus: checkConsenus
+    checkConsenus: checkConsenus,
+    makeTestCodeRequest: makeTestCodeRequest
 }

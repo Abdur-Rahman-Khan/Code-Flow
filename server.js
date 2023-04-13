@@ -22,31 +22,66 @@ app.get('/areYouActive', (req, res) => {
     // Add the IP address of the requester to the list of known IPs
     // const ip = req.ip;
 
-    const ipArr = utils.getIpAddresses();  
+    const ipArr = utils.getIpAddresses();
     // Send an immediate acknowledgement and a list of known IPs as an array
     res.send({ message: 'Acknowledged', knownIPs: ipArr });
 });
-    //fetch request for this route
-    // fetch('http://localhost:3000/areYouActive')
+//fetch request for this route
+// fetch('http://localhost:3000/areYouActive')
 
+app.post('/testCodeBackend', (req, res) => {
+    console.log("Inside Server.js testcodebackend", req.body);
+    res.send({ message: 'Testing' });
+    //check if ip is active with help of areYouActive route
+    let knownIPsArray = utils.getIpAddresses();
+    let count=0;
+    knownIPsArray.forEach(ip => {
+        axios.get(`http://${ip}/areYouActive`).then(function (response) {
+            console.log(response.data);
+            console.log(response.data.knownIPs);
+            if(count<3){
+                utils.makeTestCodeRequest(ip, req.body);
+                count++;
+            }
+        }).catch(function (error) {
+            console.log("error ip not active");
+        });
+    });
+    //make request to testcode route as test/plain with 
+    // utils.makeTestCodeRequest(`localhost:3000`, req.body);
+});
 
-app.post('/testCode',async (req, res) => {
+app.post('/testCode', async (req, res) => {
     res.send({ message: 'Testing' });
     // console.log("Inside Server.js testcode",req.body);
     // console.log(req.body);
-    // const ip = req.ip;
+    const ip = req.ip;
+    console.log("Inside Server.js testcode",ip);
+    //check port of incoming req
+    console.log(req.socket.localPort);
+    console.log(req.socket.remotePort);
+    let ipPort = ip+":"+req.socket.remotePort;
+    console.log(ipPort);
+    // console.log("Inside Server.js testcode",req.body);
     parsedReq = JSON.parse(req.body);
     const result = await utils.testCode(parsedReq.code, parsedReq.language, parsedReq.problemId);
-    // console.log("Inside Server.js testcode 1 " ,result);
+    console.log("Inside Server.js testcode 1 ", result);
+    // //for each ip in utils.knownIps set make this request
+
     axios.post('http://localhost:3000/receiveCodeStatus', result)
-    .then(function (response) {
-      console.log("Inside Server.js testcode",response.data);
-    });
+        .then(function (response) {
+            console.log("Inside Server.js testcode", response.data);
+        }).catch(function (error) {
+            console.log(error);
+        });
+
+
+
     // console.log(req.body);
     // console.log(JSON.parse(req.body).code);
-    
+
 });
-    
+
 
 
 app.post('/receiveCodeStatus', (req, res) => {
@@ -57,10 +92,11 @@ app.post('/receiveCodeStatus', (req, res) => {
     res.send({ message: 'Thanks for Testing' });
 
     utils.codeRunResponse.push(req.body);
-    if(utils.codeRunResponse.length === 3) {
+    console.log("Inside server.js receiveCode Length", utils.codeRunResponse.length);
+    if (utils.codeRunResponse.length === 3) {
         // console.log("Inside server.js receiveCode status",utils.codeRunResponse);
         let consensus = utils.checkConsenus();
-        console.log("Inside server.js receiveCode status Concensus",consensus);
+        console.log("Inside server.js receiveCode status Concensus", consensus);
         utils.codeRunResponse = [];
     }
 });
@@ -68,6 +104,6 @@ app.post('/receiveCodeStatus', (req, res) => {
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
-  utils.bootRun();
+    console.log(`Server listening on port ${port}`);
+    utils.bootRun();
 });
