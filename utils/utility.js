@@ -26,7 +26,8 @@ const lang_data = {
 };
 
 function getIpAddresses() {
-  let temp= ['127.0.0.1:3001' , '127.0.0.1:3002', '127.0.0.1.3003'];
+  let temp= ['127.0.0.1:3001' , '127.0.0.1:3002', '127.0.0.1:3003'];
+  // let temp=['10.2.71.252:3000']
   return temp;
   // return Array.from(knownIPs);
 }
@@ -68,7 +69,7 @@ function compileCode(fileName, language) {
     }
 
     // console.log(`Compilation success: ${stdout}`);
-    resolve({status:1, compiledFile: 'a.exe'});
+    resolve({status:1, compiledFile: (osType.includes('Windows')?'a.exe':'a.out')});
   })});
 }
 
@@ -79,7 +80,7 @@ function runCode(code_exe, test_file, language='C') {
     if(osType.includes('Windows')) {
       execString=`${lang_data[language].run_cmd} ${code_exe} ${test_file}`;
     } else {
-      execString=`./a.out ${test_file}`;
+      execString=`${lang_data[language].run_cmd} ./${code_exe} ${test_file}`;
     }
     // exec(`${lang_data[language].run_cmd} ${code_exe} ${test_file}`,{'timeout': 2000}, (error, stdout, stderr) => {
     exec(`${execString}`,{'timeout': 2000}, (error, stdout, stderr) => {
@@ -102,7 +103,7 @@ async function isCorrectOutput(problemId, given_ans, testFile) {
   if(osType.includes('Windows')) 
     correct_ans = await runCode(`Problems\\P${problemId}\\a.exe`, testFile);
   else
-    correct_ans = await runCode(`Problems\\P${problemId}\\./a.out`, testFile);
+    correct_ans = await runCode(`Problems/P${problemId}/a.out`, testFile);
     console.log("Inside Utility isCorrectOutput",correct_ans)
     console.log(`Given ans: ${given_ans}`);
   if(given_ans === correct_ans) {
@@ -115,7 +116,10 @@ async function runAllTests(problemId, code_exe, language) {
   console.log(`Inside Utility runAllTests`);
   test_hashes = [];
   for(let i=0; i<3; i++) {
-      testFile = `Problems\\P${problemId}\\test${i}.txt`
+      if(osType.includes('Windows'))
+        testFile = `Problems\\P${problemId}\\test${i}.txt`
+      else
+        testFile = `Problems/P${problemId}/test${i}.txt`
       given_ans = await runCode(code_exe, testFile, language);
       var hash = crypto.createHash('md5').update(given_ans).digest('hex');
       test_hashes.push(hash);
@@ -143,10 +147,13 @@ async function testCode(code, language, problemId) {
       return { result: 'Compilation Error', test_hashes: []};
   }
   console.log("Done testing utility testCode");
+  console.log("Inside Utility testCode",compiled);
   return await runAllTests(problemId, compiled.compiledFile, language);
 }
 function checkConsenus() {
-  // console.log("Inside utility checkConsenus");
+  console.log("Inside utility checkConsenus");
+  console.log(codeRunResponse.length);
+  console.log(codeRunResponse);
   let majority = Math.ceil(codeRunResponse.length/2);
   let count = 0;
   let majorityElement = null;
@@ -162,7 +169,7 @@ function checkConsenus() {
     }
   }
   //log
-  codeRunResponse = [];
+  // codeRunResponse = [];
   if(count >= majority) {
     return majorityElement;
   }
