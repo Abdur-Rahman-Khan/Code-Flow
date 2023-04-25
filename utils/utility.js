@@ -3,11 +3,14 @@ const fs = require('fs');
 const crypto = require('crypto');
 const os = require('os');
 const axios = require('axios')
+const ip = require("ip");
+const myIP = ip.address();
+let coins = 50;
 
 //get operating system name in string
 const osType=os.type();
 console.log("OS Type",osType);
-let codeRunResponse = [];
+let codeRunResponse = [[],[]];
 
 const knownIPs = new Set();
 const lang_data = {
@@ -152,17 +155,17 @@ async function testCode(code, language, problemId) {
 }
 function checkConsenus() {
   console.log("Inside utility checkConsenus");
-  console.log(codeRunResponse.length);
+  console.log(codeRunResponse[1].length);
   console.log(codeRunResponse);
-  let majority = Math.ceil(codeRunResponse.length/2);
+  let majority = Math.ceil(codeRunResponse[1].length/2);
   let count = 0;
   let majorityElement = null;
-  for(let i=0; i<codeRunResponse.length; i++) {
+  for(let i=0; i<codeRunResponse[1].length; i++) {
     //compare majorityElement with current element as object
-    if(JSON.stringify(codeRunResponse[i]) == JSON.stringify(majorityElement)) {
+    if(JSON.stringify(codeRunResponse[1][i]) == JSON.stringify(majorityElement)) {
       count++;
     } else if(count == 0) {
-      majorityElement = codeRunResponse[i];
+      majorityElement = codeRunResponse[1][i];
       count = 1;
     } else {
       count--;
@@ -171,9 +174,16 @@ function checkConsenus() {
   //log
   // codeRunResponse = [];
   if(count >= majority) {
-    return majorityElement;
+      let sendTo = [];
+      for(let i=0; i<codeRunResponse[1].length; i++) {
+      //compare majorityElement with current element as object
+      if(JSON.stringify(codeRunResponse[1][i]) === JSON.stringify(majorityElement)) {
+        sendTo.push(codeRunResponse[0][i])
+      }
+    }
+    return [majorityElement, sendTo];
   }
-  return null;
+  return [null, []];
 }
 function makeTestCodeRequest(ip,code){
   axios.post(`http://${ip}/testCode`, code, {
@@ -183,12 +193,30 @@ function makeTestCodeRequest(ip,code){
     })
 }
 
+function writeTransaction(fileName, transaction) {
+  return new Promise((resolve,reject) => {
+    fs.writeFile(fileName, JSON.stringify(transaction), (error) => {
+    if (error) {
+      // console.error(`Error saving file: ${error}`);
+      reject(error);
+    }
+
+    // console.log('File saved successfully');
+    resolve();
+  })});
+
+}
+
+
 //export function
 module.exports = {
     getIpAddresses: getIpAddresses,
     bootRun: bootRun,
     testCode: testCode,
     codeRunResponse: codeRunResponse,
+    myIP: myIP,
+    coins: coins,
+    writeTransaction: writeTransaction,
     checkConsenus: checkConsenus,
     makeTestCodeRequest: makeTestCodeRequest
 }
