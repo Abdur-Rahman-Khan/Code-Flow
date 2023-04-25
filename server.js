@@ -34,12 +34,22 @@ app.post('/testCodeBackend', (req, res) => {
     //check if ip is active with help of areYouActive route
     let knownIPsArray = utils.getIpAddresses();
     let count=0;
+    // var ip = require("ip");
+    console.dir ( ip.address() );
+    let myIP = ip.address();
+    let reqBody = JSON.parse(req.body);
+    reqBody.IP = myIP;
+
+    reqBody = JSON.stringify(reqBody);
+    // console.log(reqBody);
+
+    // console.log("Inside Server.js testcodebackend", knownIPsArray);
     knownIPsArray.forEach(ip => {
         axios.get(`http://${ip}/areYouActive`).then(function (response) {
             console.log(response.data);
             console.log(response.data.knownIPs);
             if(count<3){
-                utils.makeTestCodeRequest(ip, req.body);
+                utils.makeTestCodeRequest(ip, reqBody);
                 count++;
             }
         }).catch(function (error) {
@@ -53,9 +63,10 @@ app.post('/testCodeBackend', (req, res) => {
 
 app.post('/testCode', async (req, res) => {
     res.send({ message: 'Testing' });
+    parsedReq = JSON.parse(req.body);
     // console.log("Inside Server.js testcode",req.body);
     // console.log(req.body);
-    const ip = req.ip;
+    const ip = parsedReq.IP;
     console.log("Inside Server.js testcode",ip);
     //check port of incoming req
     console.log(req.socket.localPort);
@@ -63,12 +74,12 @@ app.post('/testCode', async (req, res) => {
     let ipPort = ip+":"+req.socket.remotePort;
     console.log(ipPort);
     // console.log("Inside Server.js testcode",req.body);
-    parsedReq = JSON.parse(req.body);
+    
     const result = await utils.testCode(parsedReq.code, parsedReq.language, parsedReq.problemId);
     console.log("Inside Server.js testcode 1 ", result);
     // //for each ip in utils.knownIps set make this request
 
-    axios.post(`http://10.2.73.1:3000/receiveCodeStatus`, result)
+    axios.post(`http://${ip}:3000/receiveCodeStatus`, result)
         .then(function (response) {
             console.log("Inside Server.js testcode", response.data);
         }).catch(function (error) {
@@ -83,14 +94,20 @@ app.post('/testCode', async (req, res) => {
 });
 
 
-
+lastReqTime = new Date();
 app.post('/receiveCodeStatus', (req, res) => {
     // const ip = req.ip;
     // const status = req.body.status;
     // const metadata = req.body.metadata;
     // console.log("Inside server.js receiveCode status",req.body);
     res.send({ message: 'Thanks for Testing' });
-
+    currReqTime = new Date();
+    console.log("Inside server.js receiveCode status", currReqTime ,lastReqTime, currReqTime - lastReqTime);
+    console.log(req.body);
+    if (currReqTime - lastReqTime > 20000) {
+        utils.codeRunResponse = [];
+        lastReqTime = currReqTime;
+    }
     utils.codeRunResponse.push(req.body);
     console.log("Inside server.js receiveCode Length", utils.codeRunResponse.length);
     if (utils.codeRunResponse.length === 3) {
