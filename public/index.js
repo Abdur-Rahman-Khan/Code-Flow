@@ -70,7 +70,7 @@ async function fetchResponseFromServer() {
     }
     else {
       clearTimeout(interval);
-      console.log(failed_para.innerText);
+      // console.log(failed_para.innerText);
       failed_para.innerText=data;
       passed_para.style.display="none";
       output_para.style.display="none";

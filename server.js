@@ -31,6 +31,7 @@ app.get('/areYouActive', (req, res) => {
 // fetch('http://localhost:3000/areYouActive')
 
 app.post('/testCodeBackend', (req, res) => {
+    status="none";
     if(utils.coins >= 30)
     {
         console.log("Inside Server.js testcodebackend", req.body);
@@ -109,7 +110,7 @@ app.post('/receiveCodeStatus', (req, res) => {
     console.log("Inside server.js receiveCode status", currReqTime ,lastReqTime, currReqTime - lastReqTime);
     console.log(req.body);
     let parsedReq = req.body;
-    if (currReqTime - lastReqTime > 10000) {
+    if (currReqTime - lastReqTime > 20000) {
         console.log("Testing Timeout");
         utils.codeRunResponse = [[],[]];
         lastReqTime = currReqTime;
@@ -118,14 +119,15 @@ app.post('/receiveCodeStatus', (req, res) => {
     utils.codeRunResponse[1].push(parsedReq.result);
     console.log("Inside server.js receiveCode Length", utils.codeRunResponse[0].length);
     if (utils.codeRunResponse[0].length === 3) {
-        // console.log("Inside server.js receiveCode status",utils.codeRunResponse);
+        console.log("Inside server.js receiveCode status",utils.codeRunResponse);
         let consensus = utils.checkConsenus();
-        if(consensus ==null){
+        console.log("reached here");
+        if(consensus[0] ==null){
             status= "noConsensus";
-        }else if(consensus.status.includes("Passed")){
+        }else if(consensus[0].status.includes("Passed")){
             status = "passed";
         }else{
-            status = consensus.status;
+            status = consensus[0].status;
         }
         console.log("Inside server.js receiveCode status Concensus", consensus);
         if (consensus[0] !== null) {
@@ -137,18 +139,22 @@ app.post('/receiveCodeStatus', (req, res) => {
                     console.log("Inside Server.js testcode", response.data);
                     if(response.data.message === 'Reward Received!') {
                         utils.coins -= 10;
+
                     }
                     await utils.writeTransaction(`transaction_${port}.txt`, transaction);
+                    utils.codeRunResponse = [[],[]];
                 }).catch(function (error) {
                     console.log(error);
+                    utils.codeRunResponse = [[],[]];
                 });
             })
         }
-        utils.codeRunResponse = [[],[]];
+        
     }
     
 });
 app.get('/getFrontendStatus', (req, res) => {
+    // console.log("Inside server.js getFrontendStatus", status);
     res.send(`${status}`);
     // console.log("Inside server.js getFrontendStatus", utils.codeRunResponse);
 });

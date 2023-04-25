@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const os = require('os');
 const axios = require('axios')
 const ip = require("ip");
+const { log } = require('console');
 const myIP = ip.address();
 let coins = 50;
 
@@ -29,8 +30,8 @@ const lang_data = {
 };
 
 function getIpAddresses() {
-  let temp= ['127.0.0.1:3001' , '127.0.0.1:3002', '127.0.0.1:3003'];
-  // let temp=['10.2.71.252:3000']
+  // let temp= ['127.0.0.1:3001' , '127.0.0.1:3002', '127.0.0.1:3003'];
+  let temp=['10.2.71.252:3001','10.2.71.252:3002','10.2.71.252:3003']
   return temp;
   // return Array.from(knownIPs);
 }
@@ -160,6 +161,7 @@ function checkConsenus() {
   let majority = Math.ceil(codeRunResponse[1].length/2);
   let count = 0;
   let majorityElement = null;
+  console.log("Done testing utility checkConsenus",[majorityElement]);
   for(let i=0; i<codeRunResponse[1].length; i++) {
     //compare majorityElement with current element as object
     if(JSON.stringify(codeRunResponse[1][i]) == JSON.stringify(majorityElement)) {
@@ -170,9 +172,11 @@ function checkConsenus() {
     } else {
       count--;
     }
+    console.log("Done testing utility checkConsenus",[majorityElement]);
   }
   //log
   // codeRunResponse = [];
+  console.log("Done testing utility checkConsenus",[majorityElement]);
   if(count >= majority) {
       let sendTo = [];
       for(let i=0; i<codeRunResponse[1].length; i++) {
@@ -181,8 +185,10 @@ function checkConsenus() {
         sendTo.push(codeRunResponse[0][i])
       }
     }
+    console.log("Done testing utility checkConsenus",[majorityElement, sendTo]);
     return [majorityElement, sendTo];
   }
+  console.log("Done testing utility checkConsenus",count);
   return [null, []];
 }
 function makeTestCodeRequest(ip,code){
@@ -195,7 +201,7 @@ function makeTestCodeRequest(ip,code){
 
 function writeTransaction(fileName, transaction) {
   return new Promise((resolve,reject) => {
-    fs.writeFile(fileName, JSON.stringify(transaction), (error) => {
+    fs.appendFile(fileName, JSON.stringify(transaction), (error) => {
     if (error) {
       // console.error(`Error saving file: ${error}`);
       reject(error);
