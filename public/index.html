@@ -34,9 +34,16 @@
         <!-- <input type="submit" value="Upload File" name="submit"> -->
         <!-- button for index.js -->
         <br>
-        <button  onclick="sendCodeToServer()">Upload File</button>
+        <button  onclick="sendCodeToServer();callFetchResponseFromServer();">Upload File</button>
     </div>
         
+    <div  class="outputData">
+        <h2>Output</h2>
+        <p id="output">Waiting (No Data)</p>
+        <p  id="passed" style="color:green">Successfully Passed</p>
+        <p id="failed" style="color:red">Failed</p>
+        <p id="noConsensus" style="color:blue">Try Again No Consensus</p>
+    </div>
     <script src="./index.js"></script>
  
 </body>

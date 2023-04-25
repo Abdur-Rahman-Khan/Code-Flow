@@ -13,6 +13,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.text())
 app.use(express.static('public'));
+let status = "none";
+
 
 app.get('/', (req, res) => {
     // res.send('Hello, World!');
@@ -115,11 +117,22 @@ app.post('/receiveCodeStatus', (req, res) => {
     if (utils.codeRunResponse.length === 3) {
         // console.log("Inside server.js receiveCode status",utils.codeRunResponse);
         let consensus = utils.checkConsenus();
+        if(consensus ==null){
+            status= "noConsensus";
+        }else if(consensus.status.includes("Passed")){
+            status = "passed";
+        }else{
+            status = consensus.status;
+        }
         console.log("Inside server.js receiveCode status Concensus", consensus);
         utils.codeRunResponse = [];
     }
+    
 });
-
+app.get('/getFrontendStatus', (req, res) => {
+    res.send(`${status}`);
+    // console.log("Inside server.js getFrontendStatus", utils.codeRunResponse);
+});
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
