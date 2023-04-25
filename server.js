@@ -29,34 +29,37 @@ app.get('/areYouActive', (req, res) => {
 // fetch('http://localhost:3000/areYouActive')
 
 app.post('/testCodeBackend', (req, res) => {
-    console.log("Inside Server.js testcodebackend", req.body);
-    res.send({ message: 'Testing' });
-    //check if ip is active with help of areYouActive route
-    let knownIPsArray = utils.getIpAddresses();
-    let count=0;
-    // var ip = require("ip");
-    console.dir ( ip.address() );
-    let myIP = ip.address();
-    let reqBody = JSON.parse(req.body);
-    reqBody.IP = myIP;
+    if(utils.coins >= 30)
+    {
+        console.log("Inside Server.js testcodebackend", req.body);
+        res.send({ message: 'Testing' });
+        //check if ip is active with help of areYouActive route
+        let knownIPsArray = utils.getIpAddresses();
+        let count=0;
+        // var ip = require("ip");
+        let reqBody = JSON.parse(req.body);
+        reqBody.IP = utils.myIP;
 
-    reqBody = JSON.stringify(reqBody);
-    // console.log(reqBody);
+        reqBody = JSON.stringify(reqBody);
+        // console.log(reqBody);
 
-    // console.log("Inside Server.js testcodebackend", knownIPsArray);
-    knownIPsArray.forEach(ip => {
-        axios.get(`http://${ip}/areYouActive`).then(function (response) {
-            console.log(response.data);
-            console.log(response.data.knownIPs);
-            if(count<3){
-                utils.makeTestCodeRequest(ip, reqBody);
-                count++;
-            }
-        }).catch(function (error) {
-            console.log(error);
-            console.log(ip,"error ip not active");
+        // console.log("Inside Server.js testcodebackend", knownIPsArray);
+        knownIPsArray.forEach(ip => {
+            axios.get(`http://${ip}/areYouActive`).then(function (response) {
+                console.log(response.data);
+                console.log(response.data.knownIPs);
+                if(count<3){
+                    utils.makeTestCodeRequest(ip, reqBody);
+                    count++;
+                }
+            }).catch(function (error) {
+                console.log(error);
+                console.log(ip,"error ip not active");
+            });
         });
-    });
+    } else {
+        console.log("Insufficient credits for testing!");
+    }
     //make request to testcode route as test/plain with 
     // utils.makeTestCodeRequest(`localhost:3000`, req.body);
 });
@@ -79,7 +82,7 @@ app.post('/testCode', async (req, res) => {
     console.log("Inside Server.js testcode 1 ", result);
     // //for each ip in utils.knownIps set make this request
 
-    axios.post(`http://${ip}:3000/receiveCodeStatus`, result)
+    axios.post(`http://${ip}:3000/receiveCodeStatus`, {ip: utils.myIP, result: result})
         .then(function (response) {
             console.log("Inside Server.js testcode", response.data);
         }).catch(function (error) {
@@ -93,37 +96,59 @@ app.post('/testCode', async (req, res) => {
 
 });
 
-
-lastReqTime = new Date();
+let lastReqTime = new Date();
 app.post('/receiveCodeStatus', (req, res) => {
     // const ip = req.ip;
     // const status = req.body.status;
     // const metadata = req.body.metadata;
     // console.log("Inside server.js receiveCode status",req.body);
     res.send({ message: 'Thanks for Testing' });
-    currReqTime = new Date();
+    let currReqTime = new Date();
     console.log("Inside server.js receiveCode status", currReqTime ,lastReqTime, currReqTime - lastReqTime);
     console.log(req.body);
-    if (currReqTime - lastReqTime > 20000) {
-        utils.codeRunResponse = [];
+    let parsedReq = req.body;
+    if (currReqTime - lastReqTime > 10000) {
+        console.log("Testing Timeout");
+        utils.codeRunResponse = [[],[]];
         lastReqTime = currReqTime;
     }
-    utils.codeRunResponse.push(req.body);
-    console.log("Inside server.js receiveCode Length", utils.codeRunResponse.length);
-    if (utils.codeRunResponse.length === 3) {
+    utils.codeRunResponse[0].push(parsedReq.ip);
+    utils.codeRunResponse[1].push(parsedReq.result);
+    console.log("Inside server.js receiveCode Length", utils.codeRunResponse[0].length);
+    if (utils.codeRunResponse[0].length === 3) {
         // console.log("Inside server.js receiveCode status",utils.codeRunResponse);
         let consensus = utils.checkConsenus();
         console.log("Inside server.js receiveCode status Concensus", consensus);
-        utils.codeRunResponse = [];
+        if (consensus[0] !== null) {
+            let knownIPsArray = utils.getIpAddresses();
+            transaction = {from: utils.myIP, to: consensus[1], reward: 10}
+            knownIPsArray.forEach(ip => {
+                axios.post(`http://${ip}/receiveReward`,transaction)
+                .then(async (response) => {
+                    console.log("Inside Server.js testcode", response.data);
+                    if(response.data.message === 'Reward Received!') {
+                        utils.coins -= 10;
+                    }
+                    await utils.writeTransaction(`transaction_${port}.txt`, transaction);
+                }).catch(function (error) {
+                    console.log(error);
+                });
+            })
+        }
+        utils.codeRunResponse = [[],[]];
     }
 });
 
-app.post('/receiveReward', (req,res) => {
-    parsedReq = JSON.parse(req.body);
-    if(parsedReq.ip === utils.myIP) {
+app.post('/receiveReward', async (req,res) => {
+    // console.log(req.body);
+    let parsedReq = req.body;
+    console.log(parsedReq)
+    if(parsedReq.to.includes(utils.myIP)) {
         utils.coins += parsedReq.reward;
     }
     res.send({ message: "Reward Received!"});
+    console.log(utils.coins);
+    await utils.writeTransaction(`transaction_${port}.txt`, parsedReq);
 })
 
 
