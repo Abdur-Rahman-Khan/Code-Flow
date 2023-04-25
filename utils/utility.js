@@ -3,6 +3,9 @@ const fs = require('fs');
 const crypto = require('crypto');
 const os = require('os');
 const axios = require('axios')
+const ip = require("ip");
+const myIP = ip.address();
+let coins = 10;
 
 //get operating system name in string
 const osType=os.type();
@@ -26,7 +29,7 @@ const lang_data = {
 };
 
 function getIpAddresses() {
-  let temp= ['127.0.0.1:3001' , '127.0.0.1:3002', '127.0.0.1.3003'];
+  let temp= ['127.0.0.1:3001' , '127.0.0.1:3002', '10.2.73.1:3000'];
   return temp;
   // return Array.from(knownIPs);
 }
@@ -162,10 +165,23 @@ function checkConsenus() {
     }
   }
   //log
-  codeRunResponse = [];
+  
   if(count >= majority) {
+      for(let i=0; i<codeRunResponse.length; i++) {
+      //compare majorityElement with current element as object
+      if(JSON.stringify(codeRunResponse[i]) == JSON.stringify(majorityElement)) {
+        count++;
+      } else if(count == 0) {
+        majorityElement = codeRunResponse[i];
+        count = 1;
+      } else {
+        count--;
+      }
+    }
+    codeRunResponse = [];
     return majorityElement;
   }
+  codeRunResponse = [];
   return null;
 }
 function makeTestCodeRequest(ip,code){
@@ -182,6 +198,8 @@ module.exports = {
     bootRun: bootRun,
     testCode: testCode,
     codeRunResponse: codeRunResponse,
+    myIP: myIP,
+    coins: coins,
     checkConsenus: checkConsenus,
     makeTestCodeRequest: makeTestCodeRequest
 }

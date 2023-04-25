@@ -2,7 +2,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const axios = require('axios')
-
 // import  * as utils  = require('./utils');
 // import * as utils from './utils';
 const utils = require('./utils/utility');
@@ -44,7 +43,8 @@ app.post('/testCodeBackend', (req, res) => {
                 count++;
             }
         }).catch(function (error) {
-            console.log("error ip not active");
+            console.log(error);
+            console.log(ip,"error ip not active");
         });
     });
     //make request to testcode route as test/plain with 
@@ -68,7 +68,7 @@ app.post('/testCode', async (req, res) => {
     console.log("Inside Server.js testcode 1 ", result);
     // //for each ip in utils.knownIps set make this request
 
-    axios.post('http://localhost:3000/receiveCodeStatus', result)
+    axios.post(`http://10.2.73.1:3000/receiveCodeStatus`, result)
         .then(function (response) {
             console.log("Inside Server.js testcode", response.data);
         }).catch(function (error) {
@@ -100,6 +100,14 @@ app.post('/receiveCodeStatus', (req, res) => {
         utils.codeRunResponse = [];
     }
 });
+
+app.post('/receiveReward', (req,res) => {
+    parsedReq = JSON.parse(req.body);
+    if(parsedReq.ip === utils.myIP) {
+        utils.coins += parsedReq.reward;
+    }
+    res.send({ message: "Reward Received!"});
+})
 
 
 const port = process.env.PORT || 3000;
