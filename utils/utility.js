@@ -30,8 +30,8 @@ const lang_data = {
 };
 
 function getIpAddresses() {
-  // let temp= ['127.0.0.1:3001' , '127.0.0.1:3002', '127.0.0.1:3003'];
-  let temp=['10.2.71.252:3001','10.2.71.252:3002','10.2.71.252:3003']
+  let temp= ['127.0.0.1:3001' , '127.0.0.1:3002', '127.0.0.1:3003'];
+  // let temp=['10.2.71.252:3001','10.2.71.252:3002','10.2.71.252:3003']
   return temp;
   // return Array.from(knownIPs);
 }
@@ -154,20 +154,20 @@ async function testCode(code, language, problemId) {
   console.log("Inside Utility testCode",compiled);
   return await runAllTests(problemId, compiled.compiledFile, language);
 }
-function checkConsenus() {
+function checkConsenus(responses) {
   console.log("Inside utility checkConsenus");
-  console.log(codeRunResponse[1].length);
-  console.log(codeRunResponse);
-  let majority = Math.ceil(codeRunResponse[1].length/2);
+  console.log(responses[1].length);
+  console.log(responses);
+  let majority = Math.ceil(responses[1].length/2);
   let count = 0;
   let majorityElement = null;
   console.log("Done testing utility checkConsenus",[majorityElement]);
-  for(let i=0; i<codeRunResponse[1].length; i++) {
+  for(let i=0; i<responses[1].length; i++) {
     //compare majorityElement with current element as object
-    if(JSON.stringify(codeRunResponse[1][i]) == JSON.stringify(majorityElement)) {
+    if(JSON.stringify(responses[1][i]) == JSON.stringify(majorityElement)) {
       count++;
     } else if(count == 0) {
-      majorityElement = codeRunResponse[1][i];
+      majorityElement = responses[1][i];
       count = 1;
     } else {
       count--;
@@ -179,10 +179,10 @@ function checkConsenus() {
   console.log("Done testing utility checkConsenus",[majorityElement]);
   if(count >= majority) {
       let sendTo = [];
-      for(let i=0; i<codeRunResponse[1].length; i++) {
+      for(let i=0; i<responses[1].length; i++) {
       //compare majorityElement with current element as object
-      if(JSON.stringify(codeRunResponse[1][i]) === JSON.stringify(majorityElement)) {
-        sendTo.push(codeRunResponse[0][i])
+      if(JSON.stringify(responses[1][i]) === JSON.stringify(majorityElement)) {
+        sendTo.push(responses[0][i])
       }
     }
     console.log("Done testing utility checkConsenus",[majorityElement, sendTo]);

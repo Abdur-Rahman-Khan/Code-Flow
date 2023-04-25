@@ -120,7 +120,7 @@ app.post('/receiveCodeStatus', (req, res) => {
     console.log("Inside server.js receiveCode Length", utils.codeRunResponse[0].length);
     if (utils.codeRunResponse[0].length === 3) {
         console.log("Inside server.js receiveCode status",utils.codeRunResponse);
-        let consensus = utils.checkConsenus();
+        let consensus = utils.checkConsenus(utils.codeRunResponse);
         console.log("reached here");
         if(consensus[0] ==null){
             status= "noConsensus";
@@ -139,19 +139,16 @@ app.post('/receiveCodeStatus', (req, res) => {
                     console.log("Inside Server.js testcode", response.data);
                     if(response.data.message === 'Reward Received!') {
                         utils.coins -= 10;
-
                     }
                     await utils.writeTransaction(`transaction_${port}.txt`, transaction);
-                    utils.codeRunResponse = [[],[]];
                 }).catch(function (error) {
                     console.log(error);
-                    utils.codeRunResponse = [[],[]];
                 });
             })
         }
+        utils.codeRunResponse = [[],[]];
         
     }
-    
 });
 app.get('/getFrontendStatus', (req, res) => {
     // console.log("Inside server.js getFrontendStatus", status);
