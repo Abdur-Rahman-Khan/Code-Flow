@@ -29,7 +29,7 @@ const lang_data = {
 };
 
 function getIpAddresses() {
-  const knownIPs = [...new Set(fs.readFileSync('./files/loips.js').toString().split(",").map((knownIp) => knownIp.trim()))];
+  const knownIPs = [...new Set(fs.readFileSync('./files/loips.txt').toString().split(",").map((knownIp) => knownIp.trim()))];
   return knownIPs;
   // return Array.from(knownIPs);
 }
