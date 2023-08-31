@@ -13,7 +13,6 @@ const osType=os.type();
 console.log("OS Type",osType);
 let codeRunResponse = [[],[]];
 
-const knownIPs = new Set();
 const lang_data = {
   'C': {
     'extension':'c',
@@ -30,9 +29,8 @@ const lang_data = {
 };
 
 function getIpAddresses() {
-  let temp= ['127.0.0.1:3001' , '127.0.0.1:3002', '127.0.0.1:3003'];
-  // let temp=['10.2.71.252:3001','10.2.71.252:3002','10.2.71.252:3003']
-  return temp;
+  const knownIPs = [...new Set(fs.readFileSync('./files/loips.js').toString().split(",").map((knownIp) => knownIp.trim()))];
+  return knownIPs;
   // return Array.from(knownIPs);
 }
 
